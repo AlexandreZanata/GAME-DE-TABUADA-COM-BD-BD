@@ -18,7 +18,7 @@
         #game {
             flex: 1;
             width: 100%;
-            background-color: #FCED00; 
+            background-color: #6603A8;
             padding: 35px;
             padding-bottom: 95px;
             color: white;
@@ -35,7 +35,7 @@
 
         input, textarea, button {
             padding: 10px;
-            margin: 25px 0;
+            margin: 55px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 40px;
@@ -43,9 +43,8 @@
             margin-left: auto;
             margin-right: auto;
             width: 80%;
-            margin-top: -20px;
+            margin-top: -50px;
         }
-
         textarea {
             height: 100px;
             resize: none;
@@ -62,6 +61,7 @@
             cursor: pointer;
             transition: background-color 0.5s ease;
             font-weight: bold;
+            font-family:sans-serif;
         }
 
         button:hover {
@@ -71,26 +71,27 @@
         .titulo {
             font-size: 80px;
             font-weight: bold;
+            margin: auto;
             margin-top: 0%;
         }
 
         .player-score {
-            font-size: 55px;
-            color: #000000;
+            font-size: 45px;
+            color: #ffffff;
             margin: 0px 0;
-            margin-top: -40px; 
+            margin-top: -31px;
             font-weight: bolder;
-            font-family: 'Times New Roman', Times, serif; 
+            font-family: 'Times New Roman', Times, serif;
             text-align: center;
         }
 
         #scoreboard {
             width: 100%;
             padding: 0px;
-            height: 140px;
+            height: 145px;
             z-index: 2;
             box-sizing: border-box;
-            background-color: #FCED00; 
+            background-color: #6603A8;
             color: black;
             position: absolute;
             bottom: 0;
@@ -116,7 +117,7 @@
         }
 
         .rainbow-text {
-            background: linear-gradient(270deg, red, rgb(30, 255, 0), rgb(255, 0, 242), rgb(252, 27, 11), rgb(0, 47, 255), rgb(255, 57, 229), rgb(0, 0, 0));
+            background: linear-gradient(270deg, rgb(0, 128, 255), rgb(30, 255, 0), rgb(255, 0, 242), rgb(255, 169, 41), rgb(0, 47, 255), rgb(33, 188, 255), rgb(255, 255, 255));
             background-size: 400% 400%;
             -webkit-background-clip: text;
             color: transparent;
@@ -124,13 +125,19 @@
         }
 
         .tituloscore {
-            font-size: 50px;
+            font-size: 45px;
             margin-top: 10px;
-            background: linear-gradient(270deg, red, rgb(30, 255, 0), rgb(255, 0, 242), rgb(252, 27, 11), rgb(0, 47, 255), rgb(255, 57, 229), rgb(0, 0, 0));
+            background: linear-gradient(270deg, rgb(0, 128, 255), rgb(30, 255, 0), rgb(255, 0, 242), rgb(255, 169, 41), rgb(0, 47, 255), rgb(33, 188, 255), rgb(255, 255, 255));
             background-size: 400% 400%;
             -webkit-background-clip: text;
             color: transparent;
             animation: rainbow 30s ease infinite;
+        }
+
+        .score-section {
+            width: 100%;
+            margin-top: 25px;
+            text-align: center;
         }
     </style>
 </head>
@@ -141,7 +148,7 @@
             <input type="text" id="player" name="player" placeholder="Nome do jogador" required autocomplete="off">
             <textarea id="equation" name="equation" readonly rows="5" cols="25"></textarea>
             <input type="number" id="answer" name="answer" placeholder="Sua resposta" required>
-            <button type="submit">ENVIAR RESPOSTA</button>
+            <button type="submit">ENVIAR</button>
         </form>
     </div>
     <div id="scoreboard">
@@ -152,9 +159,9 @@
     <script>
         const playerScores = {};
         const pairs = [];
-        const maxLimit = 500;
+        const maxLimit = 10;
     
-        for (let i = 1; i <= maxLimit; i++) {
+        for (let i = 2; i <= maxLimit; i++) {
             for (let j = 2; j <= maxLimit; j++) {
                 pairs.push([i, j]);
             }
@@ -176,18 +183,15 @@
                 shuffle(pairs);
             }
     
-            let num1, num2;
-            do {
-                [num1, num2] = pairs[currentPairIndex];
-                currentPairIndex++;
-            } while (num1 % num2 !== 0);
+            const [num1, num2] = pairs[currentPairIndex];
+            currentPairIndex++;
     
-            return `${num1} / ${num2}`;
+            return `${num1} X ${num2}`;
         }
     
         function calculateEquation(equation) {
             try {
-                const validEquation = equation.replace(/x/g, '*');
+                const validEquation = equation.replace(/X/g, '*');
                 return eval(validEquation);
             } catch {
                 return null;
@@ -209,6 +213,25 @@
             });
         }
     
+        function sendScoreToSheet(player, score) {
+            const data = { player, score };
+            
+            fetch('https://api.sheetmonkey.io/form/oTRMX3MVWdPiN75iTeK6zb', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    
         document.getElementById('score-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const player = document.getElementById('player').value;
@@ -224,6 +247,7 @@
                 document.getElementById('answer').value = '';
                 document.getElementById('equation').value = generateNextEquation();
                 updateScoreboard();
+                sendScoreToSheet(player, playerScores[player]);
             } else {
                 alert('RESPOSTA ERRADA, TENTE NOVAMENTE.');
             }
@@ -231,6 +255,5 @@
     
         document.getElementById('equation').value = generateNextEquation();
     </script>
-    
 </body>
 </html>
